@@ -1,0 +1,96 @@
+.8086
+.model tiny
+
+.data
+buff dw 10000 dup(0)
+cod db ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.>++++++++++.$"
+
+.stack 
+
+.code
+   start:
+   mov cx, offset buff
+   mov bx, offset cod
+   dec bx
+
+   mainLoop:
+   inc bx
+   mov al, byte [bx] ;Putting symbol of the code into al
+
+   cmp al, 2Bh ;Comparison with +
+   je plus
+   cmp al, 2Dh ;Comparison with -
+   je minus
+   cmp al, 3Ch ;Comparison with <
+   je left
+   cmp al, 3Eh ;Comparison with >
+   je right
+   cmp al, 2Ch ;Comparison with ,
+   je coma
+   cmp al, 2Eh ;Comparison with .
+   je dot
+   cmp al, 5Bh ;Comparison with [
+   je lbracket    
+   cmp al, 5Dh ;Comparison with ]  
+   je rbracket
+   cmp al, 24h ;Comparison with $
+   je dollar
+   jmp mainLoop ;This is a comment
+   
+   plus:
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov al, byte [bx]
+      inc al
+      mov byte [bx], al
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      jmp mainLoop
+   minus:
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov al, byte [bx]
+      dec al
+      mov byte [bx], al
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      jmp mainLoop
+   left:
+      sub cx, 2
+      jmp mainLoop
+   right:
+      add cx, 2
+      jmp mainLoop
+   coma:
+      mov ah, 07h
+      int 21h
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov byte [bx], al
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      jmp mainLoop
+   dot:
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov ah, 02h
+      mov dl, byte [bx]
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      int 21h
+      jmp mainLoop
+   lbracket:
+      push bx
+      jmp mainLoop
+   rbracket:
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov al, byte [bx]
+      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      cmp al, 0
+      jne notZeroRbracket
+      pop dx
+      jmp mainLoop  
+      
+   dollar:
+      jmp fin   
+
+    notZeroRbracket:
+      pop bx
+      dec bx
+      jmp mainLoop
+
+   fin:   
+   int 20h
+end start
