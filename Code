@@ -1,22 +1,44 @@
-.8086
 .model tiny
 
 .data
-buff dw 10000 dup(0)
-cod db ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<++++>-]<.>>>++++++++++[<+++++++++>-]<---.<<<<.+++.------.--------.>>+.>++++++++++.$"
-
-.stack 
+   endCode dw ?
+   buff dw 10000 dup(?)
+   code_buffer db 10000 dup(?)
 
 .code
+org 100h
    start:
-   mov cx, offset buff
-   mov bx, offset cod
-   dec bx
+   mov di, offset buff
+   mov cx, 10000
+   rep stosw
 
+    mov cl, ds:[80h]
+    mov bx, 81h
+    add bx, cx
+    mov byte ptr ds:[bx], 0
+
+    mov ax, 3d00h ;Opening a file
+    mov dx, 82h ;
+    int 21h
+    mov bx, ax 
+ 
+    mov ah, 3fh ;Reading the file
+    mov cx, 10000
+    lea dx, code_buffer
+    int 21h
+
+    mov di, offset code_buffer
+    add ax, di
+    mov endcode, ax 
+
+   mov bx, offset buff
+   dec di
    mainLoop:
-   inc bx
-   mov al, byte [bx] ;Putting symbol of the code into al
+   inc di
+   cmp di, endCode
+   je fin
 
+   mov al, [di] ;Putting symbol of the code into al
    cmp al, 2Bh ;Comparison with +
    je plus
    cmp al, 2Dh ;Comparison with -
@@ -33,64 +55,63 @@ cod db ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.>>>++++++++[<+
    je lbracket    
    cmp al, 5Dh ;Comparison with ]  
    je rbracket
-   cmp al, 24h ;Comparison with $
-   je dollar
    jmp mainLoop ;This is a comment
    
    plus:
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
-      mov al, byte [bx]
+      mov al, [bx]
       inc al
-      mov byte [bx], al
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov [bx], al
       jmp mainLoop
    minus:
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
-      mov al, byte [bx]
+      mov al, [bx]
       dec al
-      mov byte [bx], al
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov [bx], al
       jmp mainLoop
    left:
-      sub cx, 2
+      sub bx, 2
       jmp mainLoop
    right:
-      add cx, 2
+      add bx, 2
       jmp mainLoop
    coma:
-      mov ah, 07h
+      mov ah, 01h
       int 21h
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
-      mov byte [bx], al
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      cmp al, 0dh ;Comparing to cr
+      jne notCR
+      mov al, 0ah
+      notCR:
+      mov [bx], al
       jmp mainLoop
    dot:
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
       mov ah, 02h
-      mov dl, byte [bx]
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov dl, [bx]
+
+      ;Checking for enter
+      cmp dl, 0dh ;Comparing to cr
+      je mainLoop
+      cmp dl, 0ah
+      jne notEnter
+      mov dl, 0dh
+      int 21h
+      mov dl, 0ah
+      notEnter:
       int 21h
       jmp mainLoop
    lbracket:
-      push bx
+      push di
       jmp mainLoop
    rbracket:
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
-      mov al, byte [bx]
-      xchg bx, cx ;ВИПРАВИТИ!!!!!
+      mov al, [bx]
       cmp al, 0
       jne notZeroRbracket
-      pop dx
+      dec sp
       jmp mainLoop  
-      
-   dollar:
-      jmp fin   
-
     notZeroRbracket:
-      pop bx
-      dec bx
+      pop di
+      push di
       jmp mainLoop
 
-   fin:   
-   int 20h
+   fin:  
+   mov ah, 4ch 
+   int 21h
 end start
