@@ -17,14 +17,14 @@ org 100h
     add bx, cx
     mov byte ptr ds:[bx], 0
 
-    mov ax, 3d00h ;Opening a file
-    mov dx, 82h ;
+    mov ax, 3d00h ; syscall open file
+    mov dx, 82h ; address at which command line is stored 
     int 21h
     mov bx, ax 
  
-    mov ah, 3fh ;Reading the file
-    mov cx, 10000
-    lea dx, code_buffer
+    mov ah, 3fh ; syscall read file
+    mov cx, 10000 ; bytes to read
+    lea dx, code_buffer ; to read into code_buffer
     int 21h
 
     mov di, offset code_buffer
@@ -39,73 +39,77 @@ org 100h
    je fin
 
    mov al, [di] ;Putting symbol of the code into al
-   cmp al, 2Bh ;Comparison with +
-   je plus
-   cmp al, 2Dh ;Comparison with -
-   je minus
-   cmp al, 3Ch ;Comparison with <
-   je left
-   cmp al, 3Eh ;Comparison with >
-   je right
-   cmp al, 2Ch ;Comparison with ,
-   je coma
-   cmp al, 2Eh ;Comparison with .
-   je dot
-   cmp al, 5Bh ;Comparison with [
-   je lbracket    
-   cmp al, 5Dh ;Comparison with ]  
-   je rbracket
-   jmp mainLoop ;This is a comment
-   
-   plus:
-      mov al, [bx]
-      inc al
-      mov [bx], al
-      jmp mainLoop
-   minus:
-      mov al, [bx]
-      dec al
-      mov [bx], al
-      jmp mainLoop
-   left:
-      sub bx, 2
-      jmp mainLoop
-   right:
-      add bx, 2
-      jmp mainLoop
-   coma:
-      mov ah, 01h
-      int 21h
-      cmp al, 0dh ;Comparing to cr
-      jne notCR
-      mov al, 0ah
-      notCR:
-      mov [bx], al
-      jmp mainLoop
-   dot:
-      mov ah, 02h
-      mov dl, [bx]
 
-      ;Checking for enter
-      cmp dl, 0dh ;Comparing to cr
-      je mainLoop
-      cmp dl, 0ah
-      jne notEnter
-      mov dl, 0dh
-      int 21h
-      mov dl, 0ah
-      notEnter:
-      int 21h
-      jmp mainLoop
-   lbracket:
-      push di
-      jmp mainLoop
+   cmp al, 2Bh ;Comparison with +
+   jne minus
+    mov al, [bx]
+    inc al
+    mov [bx], al
+    jmp mainLoop
+
+   minus:
+   cmp al, 2Dh ;Comparison with -
+   jne left
+    mov al, [bx]
+    dec al
+    mov [bx], al
+    jmp mainLoop
+
+   left:   
+   cmp al, 3Ch ;Comparison with <
+   jne right
+    sub bx, 2
+    jmp mainLoop
+
+   right:
+   cmp al, 3Eh ;Comparison with >
+   jne coma
+    add bx, 2
+    jmp mainLoop
+
+   coma: 
+   cmp al, 2Ch ;Comparison with ,
+   jne dot
+    mov ah, 01h
+    int 21h
+    cmp al, 0dh ;Comparing to cr
+    jne notCR
+    mov al, 0ah
+    notCR:
+    mov [bx], al
+    jmp mainLoop
+
+   dot: 
+   cmp al, 2Eh ;Comparison with .
+   jne lbracket
+    mov ah, 02h
+    mov dl, [bx]
+    ;Checking for enter
+    cmp dl, 0dh ;Comparing to cr
+    je mainLoop
+    cmp dl, 0ah
+    jne notEnter
+    mov dl, 0dh
+    int 21h
+    mov dl, 0ah
+    notEnter:
+    int 21h
+    jmp mainLoop
+
+   lbracket:   
+   cmp al, 5Bh ;Comparison with [
+   jne rbracket    
+    push di
+    jmp mainLoop
+
    rbracket:
-      mov al, [bx]
-      cmp al, 0
-      jne notZeroRbracket
-      dec sp
-      jmp mainLoop  
+   cmp al, 5Dh ;Comparison with ]  
+   jne mainLoop ;This is a comment
+    mov al, [bx]
+    cmp al, 0
+    jne notZeroRbracket
+    dec sp
+    jmp mainLoop  
     notZeroRbracket:
       pop di
       push di
