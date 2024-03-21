@@ -79,17 +79,8 @@ org 100h
 
     pop bx
     cmp ax, 0
-    je EOF
-    mov al, [bx]
-    cmp al, 0dh
-    jne notEnter1
-    mov al, 0ah
-    notEnter1:
-    mov [bx], al
-    jmp mainLoop
+    jne mainLoop
 
-
-    EOF:
     mov al, 0ffh
     mov [bx], al
     jmp mainLoop
@@ -102,12 +93,6 @@ org 100h
     ;Checking for enter
     cmp dl, 0dh ;Comparing to cr
     je mainLoop
-    cmp dl, 0ah
-    jne notEnter
-    mov dl, 0dh
-    int 21h
-    mov dl, 0ah
-    notEnter:
     int 21h
     jmp mainLoop
 
