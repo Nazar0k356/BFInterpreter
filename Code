@@ -29,7 +29,7 @@ org 100h
 
     mov di, offset code_buffer
     add ax, di
-    mov endcode, ax 
+    mov endCode, ax 
 
    mov bx, offset buff
    dec di
@@ -70,12 +70,27 @@ org 100h
    coma: 
    cmp al, 2Ch ;Comparison with ,
    jne dot
-    mov ah, 01h
+    mov ah, 3fh
+    mov dx, bx
+    push bx
+    mov bx, 0
+    mov cx, 1
     int 21h
-    cmp al, 0dh ;Comparing to cr
-    jne notCR
+
+    pop bx
+    cmp ax, 0
+    je EOF
+    mov al, [bx]
+    cmp al, 0dh
+    jne notEnter1
     mov al, 0ah
-    notCR:
+    notEnter1:
+    mov [bx], al
+    jmp mainLoop
+
+
+    EOF:
+    mov al, 0ffh
     mov [bx], al
     jmp mainLoop
 
@@ -96,26 +111,56 @@ org 100h
     int 21h
     jmp mainLoop
 
+   fin:  
+   mov ah, 4ch 
+   int 21h 
+
    lbracket:   
    cmp al, 5Bh ;Comparison with [
-   jne rbracket    
-    push di
-    jmp mainLoop
+   jne rbracket 
+    mov al, [bx]
+    cmp al, 0
+    je isZero
+    tomain: jmp mainLoop
 
    rbracket:
    cmp al, 5Dh ;Comparison with ]  
-   jne mainLoop ;This is a comment
+   jne tomain ;This is a comment
     mov al, [bx]
     cmp al, 0
-    jne notZeroRbracket
-    dec sp
+    jne notZero
     jmp mainLoop  
-    notZeroRbracket:
-      pop di
-      push di
-      jmp mainLoop
+    notZero:
+      mov cx, 1
+     findBracket1:
+     cmp cx, 0
+     je tomain
+     dec di
+     mov al, [di]
+     cmp al, 5Bh ;Comparison with [
+     jne case1
+     dec cx
+     jmp findBracket1
+     case1:
+     cmp al, 5Dh ;Comparison with ] 
+     jne findBracket1
+     inc cx
+     jmp findBracket1
 
-   fin:  
-   mov ah, 4ch 
-   int 21h
+   isZero:
+     mov cx, 1
+     findBracket2:
+     cmp cx, 0
+     je tomain
+     inc di
+     mov al, [di]
+     cmp al, 5Bh ;Comparison with [
+     jne case2
+     inc cx
+     jmp findBracket2
+     case2:
+     cmp al, 5Dh ;Comparison with ] 
+     jne findBracket2
+     dec cx
+     jmp findBracket2  
 end start
