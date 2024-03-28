@@ -33,38 +33,39 @@ org 100h
 
    mov bx, offset buff
    dec di
+   
    mainLoop:
    inc di
    cmp di, endCode
-   je fin
+   jne cont
+   int 20h
 
-   mov al, byte ptr [di] ;Putting symbol of the code into al
+   cont:
+   mov al, [di] ;Putting symbol of the code into al
 
    cmp al, 2Bh ;Comparison with +
    jne minus
-    mov ax, word ptr [bx]
-    inc ax
-    mov word ptr [bx], ax
+    inc word ptr [bx]
     jmp mainLoop
 
    minus:
    cmp al, 2Dh ;Comparison with -
    jne left
-    mov ax, word ptr [bx]
-    dec ax
-    mov word ptr [bx], ax
+    dec word ptr [bx]
     jmp mainLoop
 
    left:   
    cmp al, 3Ch ;Comparison with <
    jne right
-    sub bx, 2
+    dec bx
+    dec bx
     jmp mainLoop
 
    right:
    cmp al, 3Eh ;Comparison with >
    jne coma
-    add bx, 2
+    inc bx
+    inc bx
     jmp mainLoop
 
    coma: 
@@ -73,7 +74,7 @@ org 100h
     mov ah, 3fh
     mov dx, bx
     push bx
-    mov bx, 0
+    xor bx, bx
     mov cx, 1
     int 21h
 
@@ -83,18 +84,14 @@ org 100h
     jne mainLoop
 
     mov ax, 0ffffh
-    mov word ptr [bx], ax
+    mov [bx], ax
     jmp mainLoop
-
-   fin:  
-   mov ah, 4ch 
-   int 21h 
 
    dot: 
    cmp al, 2Eh ;Comparison with .
    jne lbracket
     mov ah, 02h
-    mov dl, byte ptr [bx]
+    mov dl, [bx]
     ;Checking for enter
     cmp dl, 0dh ;Comparing to cr
     je tomain
@@ -110,16 +107,15 @@ org 100h
    lbracket:   
    cmp al, 5Bh ;Comparison with [
    jne rbracket 
-    mov ax, word ptr [bx]
+    mov ax, [bx]
     cmp ax, 0
     jne tomain
-    isZero:
      mov cx, 1
      findBracket2:
      cmp cx, 0
      je tomain
      inc di
-     mov al, byte ptr [di]
+     mov al, [di]
      cmp al, 5Bh ;Comparison with [
      jne case2
      inc cx
@@ -133,16 +129,15 @@ org 100h
    rbracket:
    cmp al, 5Dh ;Comparison with ]  
    jne tomain ;This is a comment
-    mov ax, word ptr [bx]
+    mov ax, [bx]
     cmp ax, 0
     je tomain
-    notZero:
       mov cx, 1
      findBracket1:
      cmp cx, 0
      je tomain
      dec di
-     mov al, byte ptr [di]
+     mov al, [di]
      cmp al, 5Bh ;Comparison with [
      jne case1
      dec cx
