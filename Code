@@ -109,7 +109,10 @@ org 100h
    jne rbracket 
     mov ax, [bx]
     cmp ax, 0
-    jne tomain
+    je isZero
+    push di
+    jmp tomain
+     isZero:
      mov cx, 1
      findBracket2:
      cmp cx, 0
@@ -132,19 +135,7 @@ org 100h
     mov ax, [bx]
     cmp ax, 0
     je tomain
-      mov cx, 1
-     findBracket1:
-     cmp cx, 0
-     je tomain
+     pop di
      dec di
-     mov al, [di]
-     cmp al, 5Bh ;Comparison with [
-     jne case1
-     dec cx
-     jmp findBracket1
-     case1:
-     cmp al, 5Dh ;Comparison with ] 
-     jne findBracket1
-     inc cx
-     jmp findBracket1
+     jmp tomain
 end start
