@@ -12,7 +12,7 @@ org 100h
    mov cx, 10000
    rep stosw
 
-    mov cl, ds:[80h]
+    mov cl, byte ptr ds:[80h]
     mov bx, 81h
     add bx, cx
     mov byte ptr ds:[bx], 0
@@ -38,21 +38,21 @@ org 100h
    cmp di, endCode
    je fin
 
-   mov al, [di] ;Putting symbol of the code into al
+   mov al, byte ptr [di] ;Putting symbol of the code into al
 
    cmp al, 2Bh ;Comparison with +
    jne minus
-    mov al, [bx]
-    inc al
-    mov [bx], al
+    mov ax, word ptr [bx]
+    inc ax
+    mov word ptr [bx], ax
     jmp mainLoop
 
    minus:
    cmp al, 2Dh ;Comparison with -
    jne left
-    mov al, [bx]
-    dec al
-    mov [bx], al
+    mov ax, word ptr [bx]
+    dec ax
+    mov word ptr [bx], ax
     jmp mainLoop
 
    left:   
@@ -78,67 +78,48 @@ org 100h
     int 21h
 
     pop bx
+    mov byte ptr [bx+1], 0
     cmp ax, 0
     jne mainLoop
 
-    mov al, 0ffh
-    mov [bx], al
-    jmp mainLoop
-
-   dot: 
-   cmp al, 2Eh ;Comparison with .
-   jne lbracket
-    mov ah, 02h
-    mov dl, [bx]
-    ;Checking for enter
-    cmp dl, 0dh ;Comparing to cr
-    je mainLoop
-    int 21h
+    mov ax, 0ffffh
+    mov word ptr [bx], ax
     jmp mainLoop
 
    fin:  
    mov ah, 4ch 
    int 21h 
 
+   dot: 
+   cmp al, 2Eh ;Comparison with .
+   jne lbracket
+    mov ah, 02h
+    mov dl, byte ptr [bx]
+    ;Checking for enter
+    cmp dl, 0dh ;Comparing to cr
+    je tomain
+    cmp dl, 0ah
+    jne output
+    mov dl, 0dh
+    int 21h
+    mov dl, 0ah
+    output:
+    int 21h
+    tomain: jmp mainLoop
+
    lbracket:   
    cmp al, 5Bh ;Comparison with [
    jne rbracket 
-    mov al, [bx]
-    cmp al, 0
-    je isZero
-    tomain: jmp mainLoop
-
-   rbracket:
-   cmp al, 5Dh ;Comparison with ]  
-   jne tomain ;This is a comment
-    mov al, [bx]
-    cmp al, 0
-    jne notZero
-    jmp mainLoop  
-    notZero:
-      mov cx, 1
-     findBracket1:
-     cmp cx, 0
-     je tomain
-     dec di
-     mov al, [di]
-     cmp al, 5Bh ;Comparison with [
-     jne case1
-     dec cx
-     jmp findBracket1
-     case1:
-     cmp al, 5Dh ;Comparison with ] 
-     jne findBracket1
-     inc cx
-     jmp findBracket1
-
-   isZero:
+    mov ax, word ptr [bx]
+    cmp ax, 0
+    jne tomain
+    isZero:
      mov cx, 1
      findBracket2:
      cmp cx, 0
      je tomain
      inc di
-     mov al, [di]
+     mov al, byte ptr [di]
      cmp al, 5Bh ;Comparison with [
      jne case2
      inc cx
@@ -148,4 +129,27 @@ org 100h
      jne findBracket2
      dec cx
      jmp findBracket2  
+
+   rbracket:
+   cmp al, 5Dh ;Comparison with ]  
+   jne tomain ;This is a comment
+    mov ax, word ptr [bx]
+    cmp ax, 0
+    je tomain
+    notZero:
+      mov cx, 1
+     findBracket1:
+     cmp cx, 0
+     je tomain
+     dec di
+     mov al, byte ptr [di]
+     cmp al, 5Bh ;Comparison with [
+     jne case1
+     dec cx
+     jmp findBracket1
+     case1:
+     cmp al, 5Dh ;Comparison with ] 
+     jne findBracket1
+     inc cx
+     jmp findBracket1
 end start
