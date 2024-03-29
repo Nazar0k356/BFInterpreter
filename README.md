@@ -1,5 +1,5 @@
 BF language interpreter
-Nazar Stepanenko
+#Nazar Stepanenko
 
 #Tech details:
 * The program receives name of the file with bf code in command line. 
